@@ -27,7 +27,7 @@
 
     logout() {
         this.storage.clear();
-        window.location.href = 'login.html';
+        window.location.href = '/login';
     },
 
     // Buscamos botones de logout por clase para evitar onclick en HTML
