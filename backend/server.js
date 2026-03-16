@@ -13,14 +13,14 @@
  * tokens) fuera del código fuente. Se sitúa en la raíz del proyecto, 
  * usa pares clave-valor y nunca debe subirse al control de versiones (Git). 
  */
-require('dotenv').config();
+ require('dotenv').config();
 
 /**
  * Express es un framework web minimalista, rápido y flexible para Node.js, 
  * diseñado para facilitar la creación de aplicaciones back-end y APIs. 
- * Proporciona una capa ligera de características fundamentales, 
- * como el enrutamiento y la gestión de middleware, 
- * permitiendo construir servidores web de manera eficiente 
+ * Proporciona una capa ligera de características fundamentales, \
+ * como el enrutamiento y la gestión de middleware, \
+ * permitiendo construir servidores web de manera eficiente \
  * sin imponer estructuras rígidas.
  */
 const express = require('express');
@@ -67,6 +67,8 @@ app.use('/uploads', express.static(uploadDir));
 app.use(express.static(path.join(__dirname, '../frontend')));
 
 // --- Registrar rutas de la API ---
+// IMPORTANTE: Las rutas de la API deben ir antes de las rutas de navegación 
+// para evitar que el comodín '*' las capture accidentalmente.
 app.use('/api/auth', authRoutes);// Prefijo para autenticación
 app.use('/api/samples', sampleRoutes);// Prefijo para gestión de audios
 app.use('/api/admin', adminRoutes);// Prefijo para gestión del admin
@@ -79,8 +81,6 @@ app.get('/', (req, res) => {
 });
 
 // Rutas amigables para las pantallas:
-
-// Opcional: Ruta para capturar cualquier otra navegación y no dar error 404 en el navegador
 app.get('/login', (req, res) => {
     res.sendFile(path.join(__dirname, '../frontend/html/login.html'));
 });
@@ -95,6 +95,18 @@ app.get('/producer-dashboard', (req, res) => {
 
 app.get('/admin-dashboard', (req, res) => {
     res.sendFile(path.join(__dirname, '../frontend/html/admin-dashboard.html'));
+});
+
+// Captura de rutas inexistentes (404)
+app.use((req, res) => {
+    // Si la petición pide un archivo (tiene extensión), mejor devolver un 404 seco
+    // para no romper el debug de scripts/estilos.
+    // if (req.path.includes('.')) {
+    //     return res.status(404).send('Recurso no encontrado');
+    // }
+
+    // Si es una ruta de navegación (ej: /loquesea), servimos el login
+    res.status(404).sendFile(path.join(__dirname, '../frontend/html/login.html'));
 });
 
 // --- Manejo de errores global ---
