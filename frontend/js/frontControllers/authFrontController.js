@@ -25,11 +25,11 @@ if (loginForm)
             // Redirigir según el rol
             if (data.role === 'admin') 
             {
-                window.location.href = '/html/admin-dashboard.html';
+                window.location.href = '/admin-dashboard';
             }
             else
             {
-                window.location.href = '/html/producer-dashboard.html';
+                window.location.href = '/producer-dashboard';
             }
 
         }
@@ -56,7 +56,7 @@ if (registerForm)
             // En lugar de alert...
             showModal('¡Éxito!', 'Usuario creado. Ahora puedes iniciar sesión.');
             // Esperar un momento o usar el botón del modal para redirigir
-            setTimeout(() => { window.location.href = 'login.html'; }, 2000);
+            setTimeout(() => { window.location.href = '/login'; }, 2000);
         }
         catch (error)
         {
