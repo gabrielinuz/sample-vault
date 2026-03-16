@@ -1,8 +1,8 @@
 /**
-*    Project     : Sample Vault
-*    Author      : Tecnologías Informáticas B - Facultad de Ingeniería - UNMdP
-*    License     : http://www.gnu.org/licenses/gpl.txt  GNU GPL 3.0
-*    Date        : Marzo 2026
+* Project     : Sample Vault
+* Author      : Tecnologías Informáticas B - Facultad de Ingeniería - UNMdP
+* License     : http://www.gnu.org/licenses/gpl.txt  GNU GPL 3.0
+* Date        : Marzo 2026
 */
 
 /**
@@ -24,90 +24,56 @@
  * sin imponer estructuras rígidas.
  */
 const express = require('express');
+
 /**
  * Módulo/Biblioteca que permite peticiones desde el origen del frontend:
  */
 const cors = require('cors');
+
 /**
  * Módulo/Biblioteca para el manejo de rutas:
  */
 const path = require('path');
+
 /**
  * Módulo/Biblioteca para el manejo del filesystem:
  */
 const fs = require('fs');
 
 /**
- * Importar las rutas definidas arriba
+ * Importar las rutas definidas arriba (API y Navegación)
  */
 const authRoutes = require('./routes/authRoutes');
 const sampleRoutes = require('./routes/sampleRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const viewRoutes = require('./routes/viewRoutes');
 
-/**
- * Instancia de express como objeto app.
- */
 const app = express();
 
 // --- Middlewares ---
-app.use(cors());// Permite peticiones desde el origen del frontend
-app.use(express.json());// Analiza cuerpos JSON en las peticiones
-app.use(express.urlencoded({ extended: true }));// Analiza datos de formularios estándar
+app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // --- Configuración de Carpetas y Rutas Estáticas ---
-
-// 1. Carpeta de subidas (Audios) Crear 'uploads' si no existe al iniciar el server
+// Carpeta de subidas (Audios) Crear 'uploads' si no existe al iniciar el server
 const uploadDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir);
 app.use('/uploads', express.static(uploadDir));
 
-// 2. Servir TODO el frontend (esto permite que el HTML acceda a ../css y ../js)
-// Servir archivos estáticos del FRONTEND
+// Servir archivos estáticos del FRONTEND 
+// (esto permite que el HTML acceda a ../css y ../js)
 // Como server.js está en /backend, subimos un nivel para encontrar /frontend
 app.use(express.static(path.join(__dirname, '../frontend')));
 
 // --- Registrar rutas de la API ---
-// IMPORTANTE: Las rutas de la API deben ir antes de las rutas de navegación 
-// para evitar que el comodín '*' las capture accidentalmente.
-app.use('/api/auth', authRoutes);// Prefijo para autenticación
-app.use('/api/samples', sampleRoutes);// Prefijo para gestión de audios
-app.use('/api/admin', adminRoutes);// Prefijo para gestión del admin
+app.use('/api/auth', authRoutes);
+app.use('/api/samples', sampleRoutes);
+app.use('/api/admin', adminRoutes);
 
-// --- Rutas de Navegación del Frontend HTML ---
-
-// Al entrar a http://localhost:3000/ cargamos login
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, '../frontend/html/login.html'));
-});
-
-// Rutas amigables para las pantallas:
-app.get('/login', (req, res) => {
-    res.sendFile(path.join(__dirname, '../frontend/html/login.html'));
-});
-
-app.get('/register', (req, res) => {
-    res.sendFile(path.join(__dirname, '../frontend/html/register.html'));
-});
-
-app.get('/producer-dashboard', (req, res) => {
-    res.sendFile(path.join(__dirname, '../frontend/html/producer-dashboard.html'));
-});
-
-app.get('/admin-dashboard', (req, res) => {
-    res.sendFile(path.join(__dirname, '../frontend/html/admin-dashboard.html'));
-});
-
-// Captura de rutas inexistentes (404)
-app.use((req, res) => {
-    // Si la petición pide un archivo (tiene extensión), mejor devolver un 404 seco
-    // para no romper el debug de scripts/estilos.
-    // if (req.path.includes('.')) {
-    //     return res.status(404).send('Recurso no encontrado');
-    // }
-
-    // Si es una ruta de navegación (ej: /loquesea), servimos el login
-    res.status(404).sendFile(path.join(__dirname, '../frontend/html/login.html'));
-});
+// --- Registrar rutas de Navegación del Frontend ---
+// Se coloca al final para que actúe como capturador de rutas de UI
+app.use('/', viewRoutes);
 
 // --- Manejo de errores global ---
 app.use((err, req, res, next) => {
