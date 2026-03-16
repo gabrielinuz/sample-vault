@@ -21,7 +21,7 @@ async function loadUsers() {
     } catch (error) {
         // Usamos el componente modal para errores de acceso
         showModal('Acceso denegado', error.message);
-        window.location.href = 'login.html';
+        window.location.href = '/login';
     }
 }
 
