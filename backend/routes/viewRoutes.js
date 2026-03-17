@@ -37,12 +37,13 @@ router.get('/admin-dashboard', (req, res) => {
 });
 
 /**
+ * @refactoring poner condición para cuando pide un archivo y no una uri
  * Captura de rutas inexistentes (404)
  * Si el usuario intenta acceder a una ruta que no existe,
  * se lo redirige automáticamente al login por seguridad y UX.
  */
-router.use((req, res) => {
-    res.status(404).sendFile(path.join(__dirname, '../../frontend/html/login.html'));
-});
+// router.use((req, res) => {
+//     res.status(404).sendFile(path.join(__dirname, '../../frontend/html/login.html'));
+// });
 
 module.exports = router;
