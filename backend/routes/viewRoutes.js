@@ -42,8 +42,15 @@ router.get('/admin-dashboard', (req, res) => {
  * Si el usuario intenta acceder a una ruta que no existe,
  * se lo redirige automáticamente al login por seguridad y UX.
  */
-// router.use((req, res) => {
-//     res.status(404).sendFile(path.join(__dirname, '../../frontend/html/login.html'));
-// });
+router.use((req, res) => {
+    // Si la petición pide un archivo (tiene extensión), mejor devolver un 404 seco
+    // para no romper el debug de scripts/estilos.
+    if (req.path.includes('.')) {
+        return res.status(404).send('Recurso no encontrado');
+    }
+
+    // Si es una ruta de navegación (ej: /loquesea), servimos el login
+    res.status(404).sendFile(path.join(__dirname, '../../frontend/html/login.html'));
+});
 
 module.exports = router;
