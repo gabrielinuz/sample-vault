@@ -53,6 +53,7 @@ JWT_SECRET=tu_clave_secreta_super_segura
 │   ├── config/          # Configuración de Multer y DB.
 │   ├── controllers/     # Lógica de negocio.
 │   ├── repositories/    # Acceso a datos (SQL).
+│   ├── routes/          # Rutas de acceso a módulos del backend.
 │   ├── uploads/         # Almacenamiento físico de sonidos.
 │   └── utils/           # Helpers de sistema de archivos (fileHelper).
 ├── frontend/
