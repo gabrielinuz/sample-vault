@@ -6,7 +6,8 @@
 */
 
 /**
- * Carga las variables del archivo .env 
+ * Carga las variables de entorno desde archivo .env 
+ * para no exponer claves en el código.
  * Un archivo .env es un archivo de texto plano utilizado 
  * en el desarrollo de software para almacenar variables de entorno 
  * y credenciales sensibles (claves API, credenciales de bases de datos, 
