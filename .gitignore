@@ -140,3 +140,7 @@ vite.config.ts.timestamp-*
 
 # Samples directory
 backend/uploads/
+
+# Code Editors project file:
+*.code-workspace
+*.geany
