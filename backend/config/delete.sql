@@ -2,10 +2,10 @@
 USE master; -- O cualquier base de datos de sistema
 
 -- Eliminar la base de datos completa
-DROP DATABASE IF EXISTS samplevault_db;
+DROP DATABASE IF EXISTS samplevault;
 
 -- Opcional: Eliminar un usuario específico si se creó uno para este proyecto
--- DROP USER IF EXISTS 'samplevault_user'@'localhost';
+DROP USER IF EXISTS 'samplevault'@'localhost';
 
 -- Confirmación de limpieza
 SELECT 'Database deleted successfully' AS Status;
