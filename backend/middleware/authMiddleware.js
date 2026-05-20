@@ -14,7 +14,7 @@
  */
 const jwt = require('jsonwebtoken');
 // En producción, siempre usar variables de entorno (.env):
-const SECRET_KEY = process.env.JWT_SECRET || 'tu_clave_secreta_super_segura';
+const SECRET_KEY = process.env.JWT_SECRET;
 
 const authMiddleware = {
     // 0. Agregar SECRET_KEY para que sea accesible al importar el objeto authMiddleware
@@ -22,12 +22,18 @@ const authMiddleware = {
 
     // 1. Verifica que el usuario esté logueado
     verifyToken: (req, res, next) => {
-        // Obtener el token del encabezado de la petición:
-        const token = req.headers['authorization'];
-        if (!token) return res.status(403).json({ message: "No se proporcionó un token." });
+        // Obtener el token del encabezado de la petición
+        //un mejor nombre es authHeader, porque esta cabecera puede traer otra información
+        //además del token:
+        const authHeader = req.headers['authorization'];
+        
+        // Mejora: Validación de formato Bearer segura
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            return res.status(403).json({ message: "Formato de token incorrecto o inexistente." });
+        }
 
-        // El token suele venir como "Bearer <token>", aquí quitamos el "Bearer ":
-        const pureToken = token.split(" ")[1];
+        // El token o authHeader suele venir como "Bearer <token>", aquí quitamos el "Bearer ":
+        const pureToken = authHeader.split(" ")[1];
 
         jwt.verify(pureToken, SECRET_KEY, (err, decoded) => {
             if (err) return res.status(401).json({ message: "Token inválido o expirado." });
@@ -42,13 +48,21 @@ const authMiddleware = {
     // 2. Verifica si el usuario tiene privilegios de Admin
     // Importante: Este middleware debe ir DESPUÉS de verifyToken en las rutas
     isAdmin: (req, res, next) => {
-        if (req.userRole !== 'admin') {
+        const roles = req.userRole; // Esto puede ser un string "admin" o un array ["producer", "admin"]
+
+        // Verificamos si el rol 'admin' está presente de forma flexible
+        const hasAdminRole = Array.isArray(roles) 
+            ? roles.includes('admin') 
+            : roles === 'admin';
+
+        if (!hasAdminRole) {
             return res.status(403).json({ 
-                message: "Acceso denegado: Se requiere rol de Administrador." 
+                message: "Acceso denegado: Se requiere privilegios de administrador." 
             });
         }
+        
         next();
-    }
+    }    
 };
 
 module.exports = authMiddleware;

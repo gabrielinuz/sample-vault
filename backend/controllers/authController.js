@@ -17,55 +17,83 @@ const { SECRET_KEY } = require('../middleware/authMiddleware');
 
 class AuthController 
 {
-    // Método para registrar un nuevo productor
+    // Registro de usuarios
     async register(req, res) 
     {
-
         try 
         {
-            const { username, password } = req.body; // Extraemos datos del cuerpo de la petición
+            const { username, password } = req.body;
 
-            // Encriptamos la contraseña con un costo de 10 saltos
+            // 1. Validación de presencia
+            if (!username || !password) {
+                return res.status(400).json({ message: "Usuario y contraseña son requeridos." });
+            }
+
             const hashedPassword = await bcrypt.hash(password, 10);            
             
-            // Guardamos en la base de datos a través del repositorio
+            // 2. Creación mediante el repositorio (que usa el SP sp_create_user)
             const userId = await userRepo.create(username, hashedPassword, 'producer');
             
-            res.status(201).json({ message: "User registered successfully", userId });
+            res.status(201).json({ 
+                message: "Usuario registrado con éxito.", 
+                userId 
+            });
         }
         catch (error)
         {
-            res.status(500).json({ message: "Error registering user", error: error.message });
+            // 3. Manejo de error específico: Usuario Duplicado (Código ER_DUP_ENTRY en MySQL)
+            if (error.code === 'ER_DUP_ENTRY') {
+                return res.status(409).json({ message: "El nombre de usuario ya existe." });
+            }
+
+            res.status(500).json({ 
+                message: "Error interno durante el registro.", 
+                error: error.message 
+            });
         }
     }
 
-    // Método para iniciar sesión
+    // Inicio de sesión
     async login(req, res) 
     {
         try
         {
             const { username, password } = req.body;
-            const user = await userRepo.findByUsername(username);
 
-            // Si el usuario no existe o la contraseña no coincide
-            if (!user || !(await bcrypt.compare(password, user.password)))
-            {
-                console.log("Invalid credentials");
-                return res.status(401).json({ message: "Invalid credentials" });
+            if (!username || !password) {
+                return res.status(400).json({ message: "Credenciales incompletas." });
             }
 
-            // Generamos el token incluyendo el ID y el Rol (expira en 2 horas)
+            // El repositorio ahora devuelve el usuario con su ROL gracias al JOIN en el SP
+            const user = await userRepo.findByUsername(username);
+
+            if (!user || !(await bcrypt.compare(password, user.password)))
+            {
+                return res.status(401).json({ message: "Credenciales inválidas." });
+            }
+
+            // 4. Generación del Token (Payload consistente con el Middleware)
             const token = jwt.sign(
-                { id: user.id, role: user.role }, 
+                { 
+                    id: user.id, 
+                    role: user.role // Este string 'admin' o 'producer' viene de la tabla roles
+                }, 
                 SECRET_KEY, 
                 { expiresIn: '2h' }
             );
 
-            res.json({ message: "Login successful", token, role: user.role });
+            res.json({ 
+                message: "Login exitoso.", 
+                token, 
+                role: user.role 
+            });
         }
         catch (error)
         {
-            res.status(500).json({ message: "Login error", error: error.message });
+            res.status(500).json({ 
+                message: "Error en el proceso de autenticación.", 
+                error: error.message 
+            });
         }
     }
 }

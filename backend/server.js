@@ -48,6 +48,7 @@ const authRoutes = require('./routes/authRoutes');
 const sampleRoutes = require('./routes/sampleRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const viewRoutes = require('./routes/viewRoutes');
+const testsRoutes = require('./routes/testsRoutes');
 
 const app = express();
 
@@ -74,7 +75,19 @@ app.use('/api/admin', adminRoutes);
 
 // --- Registrar rutas de Navegación del Frontend ---
 // Se coloca al final para que actúe como capturador de rutas de UI
-app.use('/', viewRoutes);
+
+/**
+ * Usar una variable de entorno NODE_ENV en el .env para usar
+ * el modo testing o production.
+ */
+if (process.env.NODE_ENV === 'testing') 
+{
+    app.use('/', testsRoutes);
+} 
+else 
+{
+    app.use('/', viewRoutes);
+}
 
 // --- Manejo de errores global ---
 app.use((err, req, res, next) => {

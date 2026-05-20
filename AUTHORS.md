@@ -15,7 +15,7 @@ This project is an educational prototype of a CRUD (Create Read Update and Delet
 
 ## All other contributors and their affiliations:
 
-* Estudiantes de Tecnologías B - Mar del Plata (Argentina)
+* Tecnologías B and Prácticas Profesionalizantes II Students - Mar del Plata (Argentina)
 
     * Many intelligent people.
 

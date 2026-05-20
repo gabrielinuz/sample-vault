@@ -1,8 +1,8 @@
 /**
-*    Project     : Sample Vault
-*    Author      : Tecnologías Informáticas B - Facultad de Ingeniería - UNMdP
-*    License     : http://www.gnu.org/licenses/gpl.txt  GNU GPL 3.0
-*    Date        : Marzo 2026
+* Project     : Sample Vault
+* Author      : Tecnologías Informáticas B - Facultad de Ingeniería - UNMdP
+* License     : http://www.gnu.org/licenses/gpl.txt  GNU GPL 3.0
+* Date        : Marzo 2026
 */
 
 const fileHelper = require('../utils/fileHelper');
@@ -15,73 +15,90 @@ class SampleController
     {
         try
         {
+            // 1. Validación de archivo y datos obligatorios
             if (!req.file)
             {
-                return res.status(400).json({ message: "No file uploaded or invalid format" });
+                return res.status(400).json({ message: "No se subió ningún archivo o el formato es inválido." });
             }
 
             const { display_name, category, bpm } = req.body;
-            const userId = req.userId; // Obtenido del token JWT por el middleware
-            const filename = req.file.filename;
-            const filePath = `/uploads/${filename}`; // Ruta relativa para el frontend
+            
+            if (!display_name || !category) {
+                // Si faltan datos, eliminamos el archivo físico para no dejar basura (Storage Efficiency)
+                fileHelper.deleteFile(`/uploads/${req.file.filename}`);
+                return res.status(400).json({ message: "El nombre y la categoría son obligatorios." });
+            }
 
-            // Guardar metadatos en la base de datos
-            await sampleRepo.create({
+            const userId = req.userId; // Proveniente del verifyToken
+            const filename = req.file.filename;
+            const filePath = `/uploads/${filename}`;
+
+            // 2. Persistencia mediante el SP sp_create_sample
+            const insertId = await sampleRepo.create({
                 user_id: userId,
                 filename,
                 display_name,
                 category,
-                bpm: bpm || 0,
+                bpm: parseInt(bpm) || 0,
                 file_path: filePath
             });
 
-            res.status(201).json({ message: "Sample uploaded successfully", path: filePath });
+            res.status(201).json({ 
+                message: "Sample cargado exitosamente en la biblioteca.", 
+                id: insertId,
+                path: filePath 
+            });
         }
         catch (error)
         {
-            res.status(500).json({ message: "Upload error", error: error.message });
+            // En caso de error de DB, intentar limpiar el archivo físico
+            if (req.file) fileHelper.deleteFile(`/uploads/${req.file.filename}`);
+            
+            res.status(500).json({ message: "Error durante la carga del sample.", error: error.message });
         }
     }
 
-    // Listar samples del usuario logueado
+    // Listar samples del productor logueado
     async getMySamples(req, res)
     {
         try
         {
+            // El SP sp_find_samples_by_user filtra automáticamente por user_id
             const samples = await sampleRepo.findByUserId(req.userId);
             res.json(samples);
         }
         catch (error)
         {
-            res.status(500).json({ message: "Error fetching samples", error: error.message });
+            res.status(500).json({ message: "Error al recuperar la biblioteca.", error: error.message });
         }
     }
 
+    // Eliminar un sample de la biblioteca
     async deleteSample(req, res) 
     {
         try 
         {
             const { id } = req.params;
+            const userId = req.userId;
 
-            // 1. Buscar el sample ANTES de borrarlo para tener la ruta del archivo
-            const sample = await sampleRepo.findById(id, req.userId);
-            if (!sample) return res.status(404).json({ message: "Sample no encontrado" });
-    
-            // 2. Borrar el registro de la base de datos
-            const success = await sampleRepo.delete(id, req.userId);
-    
-            if (success) 
-            {
-                // El util o wrapper fileHelper 
-                // se encarga de la "magia" de las rutas al borrar
-                fileHelper.deleteFile(sample.file_path); 
-                
-                return res.json({ message: "Biblioteca actualizada y sample eliminado." });
+            // 1. Obtener metadatos para conocer la ruta del archivo físico
+            const sample = await sampleRepo.findById(id, userId);
+            
+            if (!sample) {
+                return res.status(404).json({ message: "El sample no existe o no tienes permisos para eliminarlo." });
             }
+
+            // 2. Ejecutar sp_delete_sample en la base de datos
+            await sampleRepo.delete(id, userId);
+
+            // 3. Eliminación física del archivo (Gestión de recursos)
+            fileHelper.deleteFile(sample.file_path); 
+            
+            return res.json({ message: "Registro eliminado y archivo físico removido con éxito." });
         }
         catch (error)
         {
-            res.status(500).json({ error: error.message });
+            res.status(500).json({ message: "Error al eliminar el sample.", error: error.message });
         }
     }
 }

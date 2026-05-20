@@ -1,44 +1,46 @@
 /**
-*    Project     : Sample Vault
-*    Author      : Tecnologías Informáticas B - Facultad de Ingeniería - UNMdP
-*    License     : http://www.gnu.org/licenses/gpl.txt  GNU GPL 3.0
-*    Date        : Marzo 2026
+* Project     : Sample Vault
+* Author      : Tecnologías Informáticas B - Facultad de Ingeniería - UNMdP
+* License     : http://www.gnu.org/licenses/gpl.txt  GNU GPL 3.0
+* Date        : Marzo 2026
 */
 
 const db = require('../config/db');
 
 class UserRepository 
 {
-    // Buscar un usuario por su nombre de usuario (útil para el login)
+    // Buscar un usuario por su nombre de usuario (incluye el nombre del rol por el JOIN en el SP)
     async findByUsername(username) 
     {
-        const [rows] = await db.execute('SELECT * FROM users WHERE username = ?', [username]);
-
-        return rows[0]; // Retorna el primer usuario encontrado o undefined
+        // El SP devuelve una lista; tomamos el primer elemento del primer conjunto de resultados
+        const [rows] = await db.execute('CALL sp_find_user_by_username(?)', [username]);
+        return rows[0][0]; 
     }
 
-    // Crear un nuevo usuario en la base de datos
+    // Crear un nuevo usuario y asignar su rol en una sola operación atómica
     async create(username, hashedPassword, role = 'producer') 
     {
-        const [result] = await db.execute(
-            'INSERT INTO users (username, password, role) VALUES (?, ?, ?)',
+        const [rows] = await db.execute(
+            'CALL sp_create_user(?, ?, ?)',
             [username, hashedPassword, role]
         );
-        return result.insertId; // Retorna el ID generado
+        // El SP realiza un SELECT v_user_id as insertId al final
+        return rows[0][0].insertId;
     }
     
-    //obtener todos los usuarios
+    // Obtener todos los usuarios con sus respectivos roles
     async findAll()
     { 
-        const [rows] = await db.execute('SELECT id, username, role, created_at FROM users'); 
-        return rows; 
+        const [rows] = await db.execute('CALL sp_find_all_users()'); 
+        return rows[0]; 
     }
 
-    //borrar un usuario
+    // Borrar un usuario (la integridad referencial se encarga de sus samples y roles)
     async delete(id) 
     {
-        const [result] = await db.execute('DELETE FROM users WHERE id = ?', [id]);
-        return result.affectedRows > 0;
+        // En los SP de acción (DELETE/UPDATE), verificamos que la ejecución no lance error
+        await db.execute('CALL sp_delete_user(?)', [id]);
+        return true;
     }
 }
 
