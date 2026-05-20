@@ -1,46 +1,42 @@
 #!/bin/bash
 
-echo "Starting project setup..."
+# 1. Actualizar e instalar MariaDB de forma no interactiva
+sudo apt-get update
+sudo apt-get install -y mariadb-server
 
-# 1. Esperar a que MariaDB esté listo (la feature lo inicia automáticamente)
-until mysqladmin ping -h "localhost" --silent; do
-    echo "Waiting for MariaDB..."
-    sleep 2
-done
+# 2. Iniciar el servicio de base de datos
+sudo service mariadb start
 
-# 2. Importar la base de datos
-# Como server.js y las rutas están en /backend, buscamos el SQL allí[cite: 1, 3]
+# 3. Configurar permisos básicos (reemplaza a mysql_secure_installation en automatización)
+# Permitimos que el root entre sin password localmente para el script inicial
+sudo mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED VIA unix_socket;"
+
+# 4. Importar la base de datos (usando la ruta correcta desde la raíz)
+# Asumiendo que el script está en la raíz o en backend/config/
 if [ -f "backend/config/init.sql" ]; then
     sudo mysql -u root < backend/config/init.sql
-    echo "✅ Database initialized[cite: 3]."
+    echo "✅ Base de datos inicializada."
 else
-    echo "⚠️ Warning: init.sql not found at backend/config/"
+    echo "⚠️ No se encontró init.sql en backend/config/"
 fi
 
-# 3. Configurar Node.js v24
-# La imagen base tiene nvm preinstalado
+# 5. Configurar Node.js (La imagen base ya trae nvm, instalamos v24)
 nvm install 24
 nvm use 24
 
-# 4. Instalación de dependencias en backend
-if [ -d "backend" ]; then
+# 6. Moverse a backend, instalar dependencias y crear .env
 cd backend
 npm install
-    
-# 5. Crear el archivo .env dinámicamente[cite: 2]
-echo "Creating .env file..."
+
+echo "Creando archivo .env..."
 cat <<EOF > .env
 PORT=3000
 DB_HOST=localhost
-DB_USER=samplevaulrf2
-DB_PASS=samplevaulrf2
-DB_NAME=samplevaulrf2
+DB_USER=samplevaultest
+DB_PASS=samplevaultest
+DB_NAME=samplevaultest
 JWT_SECRET=tu_clave_secreta_super_segura
 NODE_ENV=production
 EOF
-    echo "✅ Backend dependencies installed and .env created[cite: 2]."
-else
-    echo "❌ Error: backend directory not found."
-fi
 
-echo "🚀 Setup complete! Sample Vault is ready for production."
+echo "🚀 Configuración de entorno completada con éxito."
