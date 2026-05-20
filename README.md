@@ -1,4 +1,4 @@
-# <img src="frontend/img/favicon-gold.png" width="45" height="45" align="center"> SampleVault Refactoring 2
+# <img src="frontend/img/favicon-gold.png" width="45" height="45" align="center"> SampleVault
 
 **SampleVault** es una aplicación web diseñada para la gestión profesional de librerías de sonido. Permite a los productores musicales subir, categorizar, escuchar y organizar sus muestras de audio (samples) de forma privada y segura, todo bajo una arquitectura modular y eficiente.
 
