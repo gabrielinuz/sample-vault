@@ -9,7 +9,7 @@ const express = require('express');
 const router = express.Router();
 const sampleController = require('../controllers/sampleController');
 
-//configuración de Multer para subir archivos de audio:
+// configuración de Multer para subir archivos de audio:
 const uploadMiddleware = require('../config/multerConfig');
 
 const { verifyToken } = require('../middleware/authMiddleware');
@@ -17,9 +17,24 @@ const { verifyToken } = require('../middleware/authMiddleware');
 // Todas las rutas de samples requieren que el usuario esté logueado
 router.use(verifyToken);
 
-// Subir un nuevo audio: POST /api/samples/upload
-// 'audioFile' es el nombre que debe tener el campo file en el FormData del frontend
-router.post('/upload', uploadMiddleware, sampleController.uploadSample);
+// ===== INICIO CAMBIO TP FINAL - MANEJO ERROR MULTER =====
+router.post('/upload', (req, res, next) => {
+
+    uploadMiddleware(req, res, function (err) {
+
+        // ❌ Error de Multer (archivo inválido / MIME incorrecto)
+        if (err) {
+            return res.status(415).json({
+                message: "El archivo no es un audio válido"
+            });
+        }
+
+        // ✔ continúa al controller si todo está bien
+        next();
+    });
+
+}, sampleController.uploadSample);
+// ===== FIN CAMBIO TP FINAL =====
 
 // Listar mis samples: GET /api/samples/my-samples
 router.get('/my-samples', sampleController.getMySamples);

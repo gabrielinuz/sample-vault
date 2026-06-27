@@ -1,3 +1,9 @@
+<!--
+    Project     : Sample Vault
+    Author      : Tecnologías Informáticas B - Facultad de Ingeniería - UNMdP
+    License     : http://www.gnu.org/licenses/gpl.txt  GNU GPL 3.0
+    Date        : Marzo 2026
+-->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -36,8 +42,14 @@
                     <label class="w3-margin-top w3-show">BPM (Opcional)</label>
                     <input class="w3-input w3-border w3-round w3-transparent w3-text-white" type="number" id="bpm" value="120">
 
-                    <label class="w3-margin-top w3-show">Archivo de Audio (WAV/MP3)</label>
-                    <input class="w3-input w3-border w3-round" type="file" id="audioFile" accept="audio/*" required>
+                    <label class="w3-margin-top w3-show">Archivo de Audio</label>
+
+                    <!-- CAMBIO: permitir cualquier archivo para test de validación backend -->
+                    <input class="w3-input w3-border w3-round"
+                           type="file"
+                           id="audioFile"
+                           accept="*"
+                           required>
 
                     <button type="submit" class="w3-button w3-yellow w3-block w3-round-large w3-margin-top">
                         <b>CARGAR A LA BIBLIOTECA</b>
@@ -60,7 +72,7 @@
                         </tr>
                     </thead>
                     <tbody id="samplesTableBody">
-                        </tbody>
+                    </tbody>
                 </table>
             </div>
         </div>
@@ -72,5 +84,6 @@
 <script src="../js/components/uiHandlers.js"></script>
 <script src="../js/utils/authHelper.js"></script>
 <script src="../js/frontControllers/samplesFrontController.js"></script>
+
 </body>
 </html>

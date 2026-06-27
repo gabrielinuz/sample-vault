@@ -19,27 +19,23 @@ async function loadSamples() {
 
 function renderSamplesTable(samples) {
     const tbody = document.getElementById('samplesTableBody');
-    tbody.replaceChildren(); // Limpia el contenido de forma eficiente
+    tbody.replaceChildren();
 
     samples.forEach(s => {
         const row = document.createElement('tr');
 
-        // Celda Nombre
         const tdName = document.createElement('td');
         tdName.textContent = s.display_name;
-        
-        // Celda Categoría
+
         const tdCat = document.createElement('td');
         const spanCat = document.createElement('span');
         spanCat.className = 'w3-tag w3-round w3-black';
         spanCat.textContent = s.category;
         tdCat.appendChild(spanCat);
 
-        // Celda BPM
         const tdBpm = document.createElement('td');
         tdBpm.textContent = s.bpm;
 
-        // Celda Audio (Reproductor)
         const tdAudio = document.createElement('td');
         const audio = document.createElement('audio');
         audio.controls = true;
@@ -49,7 +45,6 @@ function renderSamplesTable(samples) {
         audio.appendChild(source);
         tdAudio.appendChild(audio);
 
-        // Celda Acciones
         const tdActions = document.createElement('td');
         const btnDelete = document.createElement('button');
         btnDelete.className = 'w3-button w3-red w3-tiny w3-round';
@@ -57,7 +52,6 @@ function renderSamplesTable(samples) {
         btnDelete.addEventListener('click', () => deleteSample(s.id));
         tdActions.appendChild(btnDelete);
 
-        // Armar fila
         row.append(tdName, tdCat, tdBpm, tdAudio, tdActions);
         tbody.appendChild(row);
     });
@@ -79,19 +73,52 @@ const uploadForm = document.getElementById('uploadForm');
 if (uploadForm) {
     uploadForm.addEventListener('submit', async (e) => {
         e.preventDefault();
+
         const formData = new FormData();
         formData.append('display_name', document.getElementById('display_name').value);
         formData.append('category', document.getElementById('category').value);
         formData.append('bpm', document.getElementById('bpm').value);
         formData.append('audioFile', document.getElementById('audioFile').files[0]);
 
+        // ===== INICIO CAMBIO TP FINAL - VALIDACIÓN FRONT =====
+        const file = document.getElementById('audioFile').files[0];
+
+        if (!file) {
+            showModal('Error', 'Debe seleccionar un archivo.');
+            return;
+        }
+
+        const allowed = [
+            'audio/mpeg',
+            'audio/wav',
+            'audio/ogg',
+            'audio/flac'
+        ];
+
+        if (!allowed.includes(file.type)) {
+            showModal('Error', 'El archivo no es un audio válido.');
+            return;
+        }
+        // ===== FIN CAMBIO TP FINAL - VALIDACIÓN FRONT =====
+
         try {
             await apiService.request('/samples/upload', 'POST', formData, true);
+
             showModal('Éxito', 'Sample guardado.');
             uploadForm.reset();
             loadSamples();
+
         } catch (error) {
-            showModal('Error al subir', error.message);
+
+            // ===== INICIO CAMBIO TP FINAL - MANEJO ERROR BACKEND =====
+
+            if (error.message.includes('415')) {
+                showModal('Error', 'El archivo no es un audio válido.');
+            } else {
+                showModal('Error al subir', error.message);
+            }
+
+            // ===== FIN CAMBIO TP FINAL - MANEJO ERROR BACKEND =====
         }
     });
 }
