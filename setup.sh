@@ -21,12 +21,13 @@ else
 fi
 
 # 5. Configurar Node.js (La imagen base ya trae nvm, instalamos v24)
-nvm install 24
-nvm use 24
+#nvm install 24
+#nvm use 24
 
 # 6. Moverse a backend, instalar dependencias y crear .env
 cd backend
-npm install
+npm install express mysql2 cors multer jsonwebtoken bcrypt dotenv
+npm update
 
 echo "Creando archivo .env..."
 cat <<EOF > .env
@@ -36,7 +37,9 @@ DB_USER=samplevault
 DB_PASS=samplevault
 DB_NAME=samplevault
 JWT_SECRET=tu_clave_secreta_super_segura
-NODE_ENV=production
+NODE_ENV=testing
 EOF
+
+cp .env ../.
 
 echo "🚀 Configuración de entorno completada con éxito."
