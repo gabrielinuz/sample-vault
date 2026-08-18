@@ -14,13 +14,25 @@
  * o memoria, filtrado de tipos y límites de tamaño, añadiendo un objeto
  * file o files al objeto request.
  */
+const fs = require('fs');
+const path = require('path');
 const multer = require('multer');
-// const path = require('path');
+
+// 1. Definimos la ruta absoluta al directorio de subidas
+// process.cwd() apunta a la raíz del proyecto donde se ejecutó 'node'
+const uploadDir = path.join(process.cwd(), 'uploads');
+
+// 2. Comprobación y creación de directorio en tiempo de inicialización
+// Esto se ejecuta UNA SOLA VEZ cuando el servidor arranca.
+if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+    console.log(`📁 Directorio creado automáticamente: ${uploadDir}`);
+}
 
 // Configuración de almacenamiento de Multer
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, 'uploads/'); // Carpeta donde se guardarán físicamente
+        cb(null, uploadDir); // Carpeta donde se guardarán físicamente
     },
     filename: (req, file, cb) => {
         // Renombramos el archivo: timestamp + nombre original para que sea único
